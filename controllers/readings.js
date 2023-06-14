@@ -5,7 +5,7 @@ import Readings from "../models/Readings.js";
 // @route           GET /api/readings
 // @access          Public
 const getReadings = asyncHandler(async (req, res) => {
-  const { isInFirebase } = req.query;
+  const { isInFirebase, startDate, endDate } = req.query;
 
   if (isInFirebase) {
     const readings = await Readings.find({ isInFirebase: isInFirebase });
@@ -14,14 +14,25 @@ const getReadings = asyncHandler(async (req, res) => {
     return;
   }
 
-  const readings = await Readings.find();
+  let query = {};
+
+  if (startDate && endDate) {
+    query = {
+      createdAt: {
+        $gte: new Date(startDate),
+        $lt: new Date(endDate),
+      },
+    };
+  }
+
+  const readings = await Readings.find(query).sort({ createdAt: -1 });
 
   res.json(readings);
 });
 
-//@description      Get a single Readings
-//@route            GET /api/readings/:id
-//@access           Public
+// @description      Get a single Readings
+// @route            GET /api/readings/:id
+// @access           Public
 const getReadingsById = asyncHandler(async (req, res) => {
   const readings = await Readings.findById(req.params.id);
 
@@ -33,9 +44,9 @@ const getReadingsById = asyncHandler(async (req, res) => {
   }
 });
 
-//@description      Create a single Readings
-//@route            POST /api/readings
-//@access           Public
+// @description      Create a single Readings
+// @route            POST /api/readings
+// @access           Public
 const addReadings = asyncHandler(async (req, res) => {
   const { cellBarcode, loadUnitsBarcodes } = req.body;
   const readings = new Readings({ cellBarcode, loadUnitsBarcodes });
@@ -44,9 +55,9 @@ const addReadings = asyncHandler(async (req, res) => {
   res.status(201).json(savedReadings);
 });
 
-//@description      Update a single Readings
-//@route            PUT /api/readings/:id
-//@access           Public
+// @description      Update a single Readings
+// @route            PUT /api/readings/:id
+// @access           Public
 const updateReadings = asyncHandler(async (req, res) => {
   const { cellBarcode, loadUnitsBarcodes, isInFirebase } = req.body;
   const readings = await Readings.findById(req.params.id);
